@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-4">
+    <h2>Reports Dashboard</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card shadow h-100 py-2 border-left-primary dashboard-card">
+            <div class="card-body">
+                <a href="{{ url_for('sales_report') }}" class="text-decoration-none text-dark">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Sales Report</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-chart-line fa-2x text-primary"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card shadow h-100 py-2 border-left-success dashboard-card">
+            <div class="card-body">
+                <a href="{{ url_for('purchases_report') }}" class="text-decoration-none text-dark">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Purchases Report</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-shopping-cart fa-2x text-success"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow h-100 py-2 border-left-warning dashboard-card">
+            <div class="card-body">
+                <a href="{{ url_for('stock_report') }}" class="text-decoration-none text-dark">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Stock Report</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-boxes fa-2x text-warning"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card shadow h-100 py-2 border-left-info dashboard-card">
+            <div class="card-body">
+                <a href="{{ url_for('profit_report') }}" class="text-decoration-none text-dark">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Profit Report</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-info"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

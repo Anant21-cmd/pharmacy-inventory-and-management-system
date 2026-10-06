@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-4">
+    <h2>Inventory Status</h2>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Current Inventory</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Batch</th>
+                        <th>Quantity</th>
+                        <th>Min Stock</th>
+                        <th>Purchase Price</th>
+                        <th>Selling Price</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr>
+                        <td>{{ med.medicine_name }}</td>
+                        <td>{{ med.batch_number }}</td>
+                        <td>{{ med.quantity }}</td>
+                        <td>{{ med.minimum_stock }}</td>
+                        <td>₹{{ "%.2f"|format(med.purchase_price) }}</td>
+                        <td>₹{{ "%.2f"|format(med.selling_price) }}</td>
+                        <td>{{ med.expiry_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <span class="badge bg-{{ med.status_class }}">{{ med.status }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

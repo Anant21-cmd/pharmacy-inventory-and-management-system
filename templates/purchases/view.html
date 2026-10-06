@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <h2>Purchase Details: {{ purchase.invoice_number }}</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-info text-white"><i class="fas fa-print"></i> Print</button>
+        <a href="{{ url_for('list_purchases') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5 class="text-primary">Supplier Details</h5>
+                <p class="mb-1"><strong>Name:</strong> {{ supplier.supplier_name if supplier else 'Unknown' }}</p>
+                <p class="mb-1"><strong>Phone:</strong> {{ supplier.phone if supplier else '' }}</p>
+                <p class="mb-0"><strong>GST:</strong> {{ supplier.gst_number if supplier else '' }}</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <h5 class="text-primary">Invoice Details</h5>
+                <p class="mb-1"><strong>Invoice Number:</strong> {{ purchase.invoice_number }}</p>
+                <p class="mb-1"><strong>Date:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
+                <p class="mb-0"><strong>Payment Method:</strong> {{ purchase.payment_method }}</p>
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Medicine</th>
+                    <th>Batch Number</th>
+                    <th>Expiry Date</th>
+                    <th>Quantity</th>
+                    <th>Price per Unit</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in purchase.items %}
+                <tr>
+                    <td>{{ item.medicine_name }}</td>
+                    <td>{{ item.batch_number }}</td>
+                    <td>{{ item.expiry_date.strftime('%Y-%m-%d') if item.expiry_date else 'N/A' }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ "%.2f"|format(item.purchase_price) }}</td>
+                    <td>₹{{ "%.2f"|format(item.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="5" class="text-end">Grand Total</th>
+                    <th>₹{{ "%.2f"|format(purchase.total_amount) }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

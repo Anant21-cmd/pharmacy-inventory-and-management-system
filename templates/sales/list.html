@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Sales / POS</h2>
+    {% if current_user.role != 'staff' %}
+    <a href="{{ url_for('new_sale') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Sale</a>
+    {% endif %}
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Invoice Number</th>
+                        <th>Customer</th>
+                        <th>Grand Total</th>
+                        <th>Payment Method</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ sale.invoice_number }}</td>
+                        <td>{{ sale.customer_name }}</td>
+                        <td>₹{{ "%.2f"|format(sale.grand_total) }}</td>
+                        <td>{{ sale.payment_method }}</td>
+                        <td>
+                            <a href="{{ url_for('invoice', id=sale._id) }}" class="btn btn-sm btn-info text-white"><i class="fas fa-file-invoice"></i> Invoice</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

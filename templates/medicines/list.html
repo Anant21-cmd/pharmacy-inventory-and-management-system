@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Medicines</h2>
+    {% if current_user.role != 'staff' %}
+    <a href="{{ url_for('add_medicine') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Medicine</a>
+    {% endif %}
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Medicine List</h6>
+        <form class="d-flex" method="GET" action="{{ url_for('list_medicines') }}">
+            <input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Search..." value="{{ search }}">
+            <button class="btn btn-sm btn-outline-primary" type="submit">Search</button>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Generic Name</th>
+                        <th>Category</th>
+                        <th>Batch</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr>
+                        <td>{{ med.medicine_name }}</td>
+                        <td>{{ med.generic_name }}</td>
+                        <td>{{ med.category }}</td>
+                        <td>{{ med.batch_number }}</td>
+                        <td>₹{{ "%.2f"|format(med.selling_price) }}</td>
+                        <td>
+                            {% if med.quantity == 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% elif med.quantity <= med.minimum_stock %}
+                                <span class="badge bg-warning">{{ med.quantity }} (Low)</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ med.quantity }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('view_medicine', id=med._id) }}" class="btn btn-sm btn-info text-white"><i class="fas fa-eye"></i></a>
+                            {% if current_user.role != 'staff' %}
+                            <a href="{{ url_for('edit_medicine', id=med._id) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

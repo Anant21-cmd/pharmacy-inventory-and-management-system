@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <h2>Invoice</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-info text-white"><i class="fas fa-print"></i> Print Invoice</button>
+        <a href="{{ url_for('list_sales') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Sales</a>
+    </div>
+</div>
+
+<div class="card shadow mb-4" id="invoice-card">
+    <div class="card-body p-5">
+        <div class="row mb-5">
+            <div class="col-sm-6">
+                <h2 class="text-primary"><i class="fas fa-clinic-medical"></i> PHARMACY</h2>
+                <div>123 Medical Str, Health City</div>
+                <div>Email: contact@pharmacy.com</div>
+                <div>Phone: +91 98765 43210</div>
+            </div>
+            <div class="col-sm-6 text-end">
+                <h4 class="text-muted">INVOICE</h4>
+                <div><strong>Invoice #:</strong> {{ sale.invoice_number }}</div>
+                <div><strong>Date:</strong> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                <div><strong>Payment:</strong> {{ sale.payment_method }}</div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-sm-6">
+                <h6 class="mb-2">Billed To:</h6>
+                <div><strong>{{ customer.customer_name if customer else 'Cash Customer' }}</strong></div>
+                {% if customer %}
+                <div>Phone: {{ customer.phone }}</div>
+                <div>{{ customer.address }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sale.items %}
+                    <tr>
+                        <td>{{ item.medicine_name }}</td>
+                        <td>{{ item.batch_number }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ "%.2f"|format(item.selling_price) }}</td>
+                        <td>₹{{ "%.2f"|format(item.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row justify-content-end mt-4">
+            <div class="col-sm-5">
+                <table class="table table-borderless table-sm text-end">
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td>₹{{ "%.2f"|format(sale.subtotal) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Discount:</td>
+                        <td class="text-danger">-₹{{ "%.2f"|format(sale.discount) }}</td>
+                    </tr>
+                    <tr class="border-top fw-bold h5 text-success">
+                        <td>Grand Total:</td>
+                        <td>₹{{ "%.2f"|format(sale.grand_total) }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <p class="text-muted">Thank you for your business! Get well soon.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

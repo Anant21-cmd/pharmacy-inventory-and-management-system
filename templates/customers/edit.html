@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit Customer</h2>
+    <a href="{{ url_for('list_customers') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Customer Name *</label>
+                    <input type="text" name="customer_name" class="form-control" value="{{ customer.customer_name }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label>Phone *</label>
+                    <input type="text" name="phone" class="form-control" value="{{ customer.phone }}" required>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ customer.email }}">
+                </div>
+                <div class="col-md-4">
+                    <label>Age</label>
+                    <input type="number" name="age" class="form-control" value="{{ customer.age }}">
+                </div>
+                <div class="col-md-4">
+                    <label>Gender</label>
+                    <select name="gender" class="form-select">
+                        <option value="Male" {% if customer.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if customer.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if customer.gender == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label>Address</label>
+                <textarea name="address" class="form-control" rows="2">{{ customer.address }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Customer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

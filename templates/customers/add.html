@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Add Customer</h2>
+    <a href="{{ url_for('list_customers') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Customer Name *</label>
+                    <input type="text" name="customer_name" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label>Phone *</label>
+                    <input type="text" name="phone" class="form-control" required>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label>Age</label>
+                    <input type="number" name="age" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label>Gender</label>
+                    <select name="gender" class="form-select">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label>Address</label>
+                <textarea name="address" class="form-control" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Customer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+/* General Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar Styling */
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: #343a40;
+    color: #fff;
+    transition: all 0.3s;
+    min-height: 100vh;
+}
+#sidebar .sidebar-header {
+    padding: 20px;
+    background: #212529;
+}
+#sidebar ul p {
+    color: #fff;
+    padding: 10px;
+}
+#sidebar ul li a {
+    padding: 15px 20px;
+    font-size: 1.1em;
+    display: block;
+    color: #cbd5e0;
+    text-decoration: none;
+}
+#sidebar ul li a:hover, #sidebar ul li.active > a {
+    color: #fff;
+    background: #007bff;
+}
+
+/* Wrapper for Sidebar and Content */
+.wrapper {
+    display: flex;
+    align-items: stretch;
+}
+
+/* Content Styling */
+#content {
+    width: 100%;
+    padding: 20px;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+/* Cards */
+.dashboard-card {
+    border-left: 4px solid #007bff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.2s;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+.dashboard-card.border-left-success { border-left-color: #28a745; }
+.dashboard-card.border-left-warning { border-left-color: #ffc107; }
+.dashboard-card.border-left-danger { border-left-color: #dc3545; }
+
+/* Print Styles */
+@media print {
+    #sidebar, .navbar, .no-print {
+        display: none !important;
+    }
+    #content {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
+    .card {
+        border: none;
+        box-shadow: none;
+    }
+}
+
+/* Badge Styles */
+.badge-status {
+    font-size: 0.9em;
+    padding: 5px 10px;
+}

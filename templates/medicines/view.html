@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Medicine Details</h2>
+    <div>
+        {% if current_user.role != 'staff' %}
+        <a href="{{ url_for('edit_medicine', id=medicine._id) }}" class="btn btn-warning"><i class="fas fa-edit"></i> Edit</a>
+        {% endif %}
+        <a href="{{ url_for('list_medicines') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <table class="table table-bordered">
+            <tr>
+                <th width="20%">Medicine Name</th>
+                <td>{{ medicine.medicine_name }}</td>
+                <th width="20%">Generic Name</th>
+                <td>{{ medicine.generic_name }}</td>
+            </tr>
+            <tr>
+                <th>Brand Name</th>
+                <td>{{ medicine.brand_name }}</td>
+                <th>Category</th>
+                <td>{{ medicine.category }}</td>
+            </tr>
+            <tr>
+                <th>Dosage / Form / Strength</th>
+                <td>{{ medicine.dosage }} / {{ medicine.form }} / {{ medicine.strength }}</td>
+                <th>Manufacturer</th>
+                <td>{{ medicine.manufacturer }}</td>
+            </tr>
+            <tr>
+                <th>Batch Number</th>
+                <td>{{ medicine.batch_number }}</td>
+                <th>Supplier</th>
+                <td>{{ supplier.supplier_name if supplier else 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th>Purchase Price</th>
+                <td>₹{{ "%.2f"|format(medicine.purchase_price) }}</td>
+                <th>Selling Price</th>
+                <td>₹{{ "%.2f"|format(medicine.selling_price) }}</td>
+            </tr>
+            <tr>
+                <th>Quantity</th>
+                <td>{{ medicine.quantity }}</td>
+                <th>Minimum Stock</th>
+                <td>{{ medicine.minimum_stock }}</td>
+            </tr>
+            <tr>
+                <th>Manufacturing Date</th>
+                <td>{{ medicine.manufacturing_date.strftime('%Y-%m-%d') }}</td>
+                <th>Expiry Date</th>
+                <td>{{ medicine.expiry_date.strftime('%Y-%m-%d') }}</td>
+            </tr>
+            <tr>
+                <th>Prescription Required</th>
+                <td>{{ 'Yes' if medicine.prescription_required else 'No' }}</td>
+                <th>Description</th>
+                <td>{{ medicine.description }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endblock %}

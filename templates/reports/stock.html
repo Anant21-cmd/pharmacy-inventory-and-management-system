@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <h2>Stock Report</h2>
+    <div>
+        <button onclick="window.print()" class="btn btn-info text-white"><i class="fas fa-print"></i> Print</button>
+        <a href="{{ url_for('reports_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Medicines</h5>
+                <h2>{{ total_meds }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Quantity</h5>
+                <h2>{{ total_qty }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h5 class="card-title">Low Stock Items</h5>
+                <h2>{{ low_stock }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title">Out of Stock / Expired</h5>
+                <h2>{{ out_of_stock }} / {{ expired }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Category</th>
+                        <th>Stock</th>
+                        <th>Min Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr>
+                        <td>{{ med.medicine_name }}</td>
+                        <td>{{ med.category }}</td>
+                        <td>{{ med.quantity }}</td>
+                        <td>{{ med.minimum_stock }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
