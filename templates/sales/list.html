@@ -31,6 +31,11 @@
                         <td>{{ sale.payment_method }}</td>
                         <td>
                             <a href="{{ url_for('invoice', id=sale._id) }}" class="btn btn-sm btn-info text-white"><i class="fas fa-file-invoice"></i> Invoice</a>
+                            {% if current_user.role == 'admin' %}
+                            <form action="{{ url_for('delete_sale', id=sale._id) }}" method="POST" class="d-inline" onsubmit="return confirm('WARNING: Deleting a sale will NOT return the stock to inventory. Are you sure?');">
+                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                            </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

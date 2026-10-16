@@ -6,56 +6,105 @@
     <title>Login - Pharmacy System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-card { max-width: 400px; width: 100%; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #118ab2 0%, #06d6a0 100%);
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .login-card {
+            max-width: 400px;
+            width: 100%;
+            padding: 2.5rem;
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+
+        .text-primary { color: #118ab2 !important; }
+        .text-muted { color: #6c757d !important; }
+        
+        .btn-primary {
+            background: #118ab2;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-primary:hover {
+            background: #0d6efd;
+        }
+        
+        .demo-creds {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 0.85rem;
+            border: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
 
-<div class="card login-card p-4">
-    <div class="text-center mb-4">
-        <h3 class="text-primary"><i class="fas fa-clinic-medical"></i> Pharmacy</h3>
-        <p class="text-muted">Inventory & Management System</p>
-    </div>
+<div class="login-container">
+    <div class="card login-card">
+        
+        <div class="text-center mb-4">
+            <h3 class="text-primary fw-bold"><i class="fas fa-notes-medical"></i> Pharmacy 3.0</h3>
+            <p class="text-muted">Enterprise Management System</p>
+        </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="mb-3">
+                    <label class="form-label text-dark">Email address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <input type="email" name="email" class="form-control" required placeholder="admin@pharmacy.com">
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <form method="POST" action="{{ url_for('login') }}">
-        <div class="mb-3">
-            <label class="form-label">Email address</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                <input type="email" name="email" class="form-control" required placeholder="admin@pharmacy.com">
+                <div class="mb-4">
+                    <label class="form-label text-dark">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="password" class="form-control" required placeholder="Admin@123">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-2">SECURE LOGIN</button>
+            </form>
+            
+            <div class="mt-4 text-center demo-creds text-dark">
+                <div class="text-primary mb-1 fw-bold"><i class="fas fa-info-circle"></i> Demo Credentials:</div>
+                <div>Admin: admin@pharmacy.com / Admin@123</div>
+                <div>Pharmacist: pharmacist@pharmacy.com / Pharma@123</div>
+                <div>Staff: staff@pharmacy.com / Staff@123</div>
             </div>
         </div>
-        <div class="mb-4">
-            <label class="form-label">Password</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" name="password" class="form-control" required placeholder="Admin@123">
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Login</button>
-    </form>
-    
-    <div class="mt-4 text-center">
-        <small class="text-muted">Demo Credentials:</small><br>
-        <small>Admin: admin@pharmacy.com / Admin@123</small><br>
-        <small>Pharmacist: pharmacist@pharmacy.com / Pharma@123</small><br>
-        <small>Staff: staff@pharmacy.com / Staff@123</small>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

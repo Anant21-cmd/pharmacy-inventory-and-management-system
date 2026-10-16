@@ -27,40 +27,46 @@
                     <a href="{{ url_for('dashboard') }}"><i class="fas fa-home me-2"></i> Dashboard</a>
                 </li>
                 
-                <li class="{% if 'medicines' in request.endpoint %}active{% endif %}">
+                <li class="{% if request.endpoint and 'medicines' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('list_medicines') }}"><i class="fas fa-pills me-2"></i> Medicines</a>
                 </li>
                 
-                <li class="{% if 'inventory' in request.endpoint %}active{% endif %}">
+                <li class="{% if request.endpoint and 'inventory' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('inventory') }}"><i class="fas fa-boxes me-2"></i> Inventory</a>
                 </li>
 
-                <li class="{% if 'sales' in request.endpoint %}active{% endif %}">
+                {% if current_user.role != 'staff' %}
+                <li class="{% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('list_sales') }}"><i class="fas fa-shopping-cart me-2"></i> Sales / POS</a>
                 </li>
+                {% endif %}
 
-                <li class="{% if 'purchases' in request.endpoint %}active{% endif %}">
+                {% if current_user.role != 'pharmacist' %}
+                <li class="{% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('list_purchases') }}"><i class="fas fa-truck-loading me-2"></i> Purchases</a>
                 </li>
+                {% endif %}
 
-                <li class="{% if 'suppliers' in request.endpoint %}active{% endif %}">
+                <li class="{% if request.endpoint and 'suppliers' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('list_suppliers') }}"><i class="fas fa-truck me-2"></i> Suppliers</a>
                 </li>
 
-                <li class="{% if 'customers' in request.endpoint %}active{% endif %}">
+                <li class="{% if request.endpoint and 'customers' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('list_customers') }}"><i class="fas fa-users me-2"></i> Customers</a>
                 </li>
 
-                <li class="{% if 'prescriptions' in request.endpoint %}active{% endif %}">
+                <li class="{% if request.endpoint and 'prescriptions' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('list_prescriptions') }}"><i class="fas fa-file-prescription me-2"></i> Prescriptions</a>
                 </li>
 
-                <li class="{% if 'reports' in request.endpoint %}active{% endif %}">
+                {% if current_user.role != 'staff' %}
+                <li class="{% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('reports_dashboard') }}"><i class="fas fa-chart-bar me-2"></i> Reports</a>
                 </li>
+                {% endif %}
 
                 {% if current_user.role == 'admin' %}
-                <li class="{% if 'users' in request.endpoint %}active{% endif %}">
+                <li class="{% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
                     <a href="{{ url_for('list_users') }}"><i class="fas fa-user-shield me-2"></i> Users</a>
                 </li>
                 {% endif %}

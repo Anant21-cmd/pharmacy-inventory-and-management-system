@@ -1,6 +1,11 @@
 Flask
-pymongo
+pymongo[srv]
 python-dotenv
 Flask-Bcrypt
 Flask-Login
 Werkzeug
+gunicorn
+Pillow
+pytesseract
+thefuzz
+python-Levenshtein

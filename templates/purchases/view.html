@@ -37,7 +37,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in purchase.items %}
+                {% for item in purchase['items'] %}
                 <tr>
                     <td>{{ item.medicine_name }}</td>
                     <td>{{ item.batch_number }}</td>

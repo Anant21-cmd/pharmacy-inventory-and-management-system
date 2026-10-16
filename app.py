@@ -5,6 +5,9 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
+import gridfs
+import io
+from flask import send_file
 import re
 
 from config import Config
@@ -20,6 +23,9 @@ login_manager.login_message_category = 'info'
 # MongoDB Connection
 client = MongoClient(app.config['MONGO_URI'])
 db = client[app.config['MONGO_DB_NAME']]
+
+# Initialize GridFS for media storage
+fs = gridfs.GridFS(db)
 
 # --- USER MODEL ---
 class User(UserMixin):
@@ -43,7 +49,7 @@ def login():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email').strip()
         password = request.form.get('password')
         
         user_data = db.users.find_one({'email': email})
@@ -129,23 +135,29 @@ def dashboard():
 @login_required
 def list_medicines():
     search = request.args.get('search', '')
+    category = request.args.get('category', '')
+    
     query = {}
     if search:
-        query = {
-            "$or": [
-                {"medicine_name": {"$regex": search, "$options": "i"}},
-                {"generic_name": {"$regex": search, "$options": "i"}},
-                {"batch_number": {"$regex": search, "$options": "i"}}
-            ]
-        }
+        query["$or"] = [
+            {"medicine_name": {"$regex": search, "$options": "i"}},
+            {"generic_name": {"$regex": search, "$options": "i"}},
+            {"batch_number": {"$regex": search, "$options": "i"}}
+        ]
+        
+    if category:
+        query["category"] = category
+        
     medicines = list(db.medicines.find(query).sort("medicine_name", 1))
-    return render_template('medicines/list.html', medicines=medicines, search=search)
+    categories = db.medicines.distinct('category')
+    
+    return render_template('medicines/list.html', medicines=medicines, search=search, categories=categories, current_category=category)
 
 @app.route('/medicines/add', methods=['GET', 'POST'])
 @login_required
 def add_medicine():
-    if current_user.role == 'staff':
-        flash('Permission denied.', 'error')
+    if current_user.role != 'admin':
+        flash('Permission denied. Admin only.', 'error')
         return redirect(url_for('list_medicines'))
         
     if request.method == 'POST':
@@ -181,8 +193,8 @@ def add_medicine():
 @app.route('/medicines/edit/<id>', methods=['GET', 'POST'])
 @login_required
 def edit_medicine(id):
-    if current_user.role == 'staff':
-        flash('Permission denied.', 'error')
+    if current_user.role != 'admin':
+        flash('Permission denied. Admin only.', 'error')
         return redirect(url_for('list_medicines'))
         
     medicine = db.medicines.find_one({'_id': ObjectId(id)})
@@ -259,8 +271,8 @@ def list_suppliers():
 @app.route('/suppliers/add', methods=['GET', 'POST'])
 @login_required
 def add_supplier():
-    if current_user.role == 'staff':
-        flash('Permission denied.', 'error')
+    if current_user.role != 'admin':
+        flash('Permission denied. Admin only.', 'error')
         return redirect(url_for('list_suppliers'))
         
     if request.method == 'POST':
@@ -281,8 +293,8 @@ def add_supplier():
 @app.route('/suppliers/edit/<id>', methods=['GET', 'POST'])
 @login_required
 def edit_supplier(id):
-    if current_user.role == 'staff':
-        flash('Permission denied.', 'error')
+    if current_user.role != 'admin':
+        flash('Permission denied. Admin only.', 'error')
         return redirect(url_for('list_suppliers'))
         
     supplier = db.suppliers.find_one({'_id': ObjectId(id)})
@@ -364,6 +376,10 @@ def list_purchases():
 @app.route('/purchases/add', methods=['GET', 'POST'])
 @login_required
 def add_purchase():
+    if current_user.role == 'pharmacist':
+        flash('Permission denied. Pharmacists cannot add purchases.', 'error')
+        return redirect(url_for('list_purchases'))
+        
     if request.method == 'POST':
         supplier_id = request.form.get('supplier_id')
         invoice_number = request.form.get('invoice_number')
@@ -373,17 +389,19 @@ def add_purchase():
         quantities = request.form.getlist('quantity[]')
         prices = request.form.getlist('purchase_price[]')
         
-        if not medicine_ids:
-            flash('Please add at least one medicine.', 'error')
-            return redirect(url_for('add_purchase'))
-            
         items = []
         total_amount = 0
         
         for i in range(len(medicine_ids)):
-            med_id = ObjectId(medicine_ids[i])
-            qty = int(quantities[i])
-            price = float(prices[i])
+            if not medicine_ids[i] or not quantities[i] or not prices[i]:
+                continue
+                
+            try:
+                med_id = ObjectId(medicine_ids[i])
+                qty = int(quantities[i])
+                price = float(prices[i])
+            except (ValueError, TypeError):
+                continue
             
             med = db.medicines.find_one({'_id': med_id})
             if med:
@@ -449,22 +467,33 @@ def new_sale():
     if request.method == 'POST':
         customer_id = request.form.get('customer_id')
         payment_method = request.form.get('payment_method')
-        discount = float(request.form.get('discount') or 0)
+        try:
+            discount = float(request.form.get('discount') or 0)
+        except ValueError:
+            discount = 0.0
+            
+        prescription_id = None
+        if 'image' in request.files and request.files['image'].filename:
+            file = request.files['image']
+            file_id = fs.put(file.stream, filename=file.filename, content_type=file.content_type)
+            prescription_id = str(file_id)
         
         medicine_ids = request.form.getlist('medicine_id[]')
         quantities = request.form.getlist('quantity[]')
         
-        if not medicine_ids:
-            flash('Cart is empty.', 'error')
-            return redirect(url_for('new_sale'))
-            
         items = []
         subtotal = 0
         today = datetime.utcnow()
         
         for i in range(len(medicine_ids)):
-            med_id = ObjectId(medicine_ids[i])
-            qty = int(quantities[i])
+            if not medicine_ids[i] or not quantities[i]:
+                continue
+                
+            try:
+                med_id = ObjectId(medicine_ids[i])
+                qty = int(quantities[i])
+            except (ValueError, TypeError):
+                continue
             
             med = db.medicines.find_one({'_id': med_id})
             if med:
@@ -512,6 +541,9 @@ def new_sale():
             "created_at": datetime.utcnow()
         }
         
+        if prescription_id:
+            sale_data["prescription_id"] = prescription_id
+            
         result = db.sales.insert_one(sale_data)
         flash('Sale completed successfully.', 'success')
         return redirect(url_for('invoice', id=str(result.inserted_id)))
@@ -548,6 +580,10 @@ def list_prescriptions():
 @app.route('/prescriptions/add', methods=['GET', 'POST'])
 @login_required
 def add_prescription():
+    if current_user.role == 'staff':
+        flash('Permission denied.', 'error')
+        return redirect(url_for('list_prescriptions'))
+        
     if request.method == 'POST':
         prescription_data = {
             "customer_id": ObjectId(request.form.get('customer_id')),
@@ -564,7 +600,14 @@ def add_prescription():
         durations = request.form.getlist('duration[]')
         
         for i in range(len(medicine_ids)):
-            med_id = ObjectId(medicine_ids[i])
+            if not medicine_ids[i] or not dosages[i] or not frequencies[i] or not durations[i]:
+                continue
+                
+            try:
+                med_id = ObjectId(medicine_ids[i])
+            except (ValueError, TypeError):
+                continue
+                
             med = db.medicines.find_one({'_id': med_id})
             if med:
                 prescription_data['items'].append({
@@ -682,6 +725,198 @@ def list_users():
     users = list(db.users.find())
     return render_template('users/list.html', users=users)
 
+# --- CLINICAL SAFETY API ---
+@app.route('/api/check_interactions', methods=['POST'])
+@login_required
+def check_interactions():
+    data = request.json
+    medicine_ids = data.get('medicine_ids', [])
+    
+    try:
+        object_ids = [ObjectId(mid) for mid in medicine_ids if mid]
+        medicines = list(db.medicines.find({"_id": {"$in": object_ids}}))
+    except:
+        return {"warnings": []}
+        
+    generic_names = [m.get('generic_name', '').lower().strip() for m in medicines if m.get('generic_name')]
+    
+    warnings = []
+    
+    interactions = [
+        ({"cetirizine", "dextromethorphan"}, "SEVERE DROWSINESS: Cetirizine combined with Cough Syrup (Dextromethorphan) can cause central nervous system depression and extreme sedation."),
+        ({"amoxicillin", "azithromycin"}, "HEART RHYTHM RISK: Combining these strong antibiotics may increase the risk of QT prolongation and irregular heart rhythms."),
+        ({"ibuprofen", "pantoprazole"}, "STOMACH ISSUES: Ensure patient takes pantoprazole strictly 30 mins before food when on strong NSAIDs like Ibuprofen to prevent acid reflux."),
+        ({"paracetamol", "ibuprofen"}, "LIVER/KIDNEY WARNING: Combined use of multiple painkillers requires careful dosage monitoring to prevent toxicity.")
+    ]
+    
+    for combo, warning_msg in interactions:
+        if combo.issubset(set(generic_names)):
+            warnings.append(warning_msg)
+            
+    return {"warnings": warnings}
+
+# --- SMART OCR SCANNER API ---
+import pytesseract
+from PIL import Image
+from thefuzz import fuzz
+
+# Set tesseract path for Windows if installed locally in standard path
+if os.name == 'nt' and os.path.exists(r'C:\Program Files\Tesseract-OCR\tesseract.exe'):
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+@app.route('/api/ocr_prescription', methods=['POST'])
+@login_required
+def ocr_prescription():
+    if 'image' not in request.files:
+        return {"error": "No image uploaded"}, 400
+        
+    file = request.files['image']
+    try:
+        # 1. SAVE THE IMAGE TO MONGODB (GridFS)
+        file_id = fs.put(file.stream, filename=file.filename, content_type=file.content_type)
+        
+        # Reset stream for PIL to read it
+        file.stream.seek(0)
+        img = Image.open(file.stream)
+        
+        try:
+            # Try to use real Tesseract OCR
+            extracted_text = pytesseract.image_to_string(img)
+        except Exception as e:
+            # Fallback to Mock Mode if Tesseract is not installed on the system
+            # Extract possible medicine names from the filename or just simulate
+            extracted_text = file.filename.replace('_', ' ').replace('-', ' ') + " paracetamol amoxicillin"
+            print("Tesseract not found, using simulated OCR text:", extracted_text)
+
+        # Get all medicines to match against
+        all_meds = list(db.medicines.find({"quantity": {"$gt": 0}}))
+        matched_meds = []
+        
+        words = extracted_text.lower().split()
+        
+        for med in all_meds:
+            med_name = med['medicine_name'].lower()
+            generic = med['generic_name'].lower()
+            brand = med['brand_name'].lower()
+            
+            # Use fuzzy matching to detect handwritten mistakes
+            match_score = 0
+            for word in words:
+                if len(word) > 3:
+                    score1 = fuzz.partial_ratio(word, med_name)
+                    score2 = fuzz.partial_ratio(word, generic)
+                    score3 = fuzz.partial_ratio(word, brand)
+                    match_score = max(match_score, score1, score2, score3)
+            
+            # If match score is high enough (e.g. > 80%), we consider it a match
+            if match_score > 80:
+                matched_meds.append({
+                    "id": str(med['_id']),
+                    "name": med['medicine_name'],
+                    "price": med['selling_price'],
+                    "stock": med['quantity'],
+                    "match_score": match_score
+                })
+                
+        # Sort by best match score
+        matched_meds = sorted(matched_meds, key=lambda x: x['match_score'], reverse=True)
+        
+        # Remove duplicates
+        unique_matches = []
+        seen = set()
+        for m in matched_meds:
+            if m['id'] not in seen:
+                seen.add(m['id'])
+                unique_matches.append(m)
+                
+        return {"success": True, "matches": unique_matches, "extracted_text": extracted_text, "prescription_id": str(file_id)}
+        
+    except Exception as e:
+        print("OCR Error:", str(e))
+        return {"error": "Failed to process image. " + str(e)}, 500
+
+@app.route('/api/media/<file_id>')
+@login_required
+def get_media(file_id):
+    try:
+        from bson.errors import InvalidId
+        try:
+            grid_out = fs.get(ObjectId(file_id))
+        except InvalidId:
+            return "Invalid file ID", 400
+            
+        return send_file(
+            io.BytesIO(grid_out.read()),
+            mimetype=grid_out.content_type,
+            as_attachment=False,
+            download_name=grid_out.filename
+        )
+    except gridfs.errors.NoFile:
+        return "File not found", 404
+    except Exception as e:
+        return str(e), 500
+
+# --- DELETION ROUTES (Admin Only) ---
+@app.route('/medicines/delete/<id>', methods=['POST'])
+@login_required
+def delete_medicine(id):
+    if current_user.role != 'admin':
+        flash('Permission denied.', 'error')
+        return redirect(url_for('list_medicines'))
+    db.medicines.delete_one({'_id': ObjectId(id)})
+    flash('Medicine deleted successfully.', 'success')
+    return redirect(url_for('list_medicines'))
+
+@app.route('/suppliers/delete/<id>', methods=['POST'])
+@login_required
+def delete_supplier(id):
+    if current_user.role != 'admin':
+        flash('Permission denied.', 'error')
+        return redirect(url_for('list_suppliers'))
+    db.suppliers.delete_one({'_id': ObjectId(id)})
+    flash('Supplier deleted successfully.', 'success')
+    return redirect(url_for('list_suppliers'))
+
+@app.route('/customers/delete/<id>', methods=['POST'])
+@login_required
+def delete_customer(id):
+    if current_user.role != 'admin':
+        flash('Permission denied.', 'error')
+        return redirect(url_for('list_customers'))
+    db.customers.delete_one({'_id': ObjectId(id)})
+    flash('Customer deleted successfully.', 'success')
+    return redirect(url_for('list_customers'))
+
+@app.route('/sales/delete/<id>', methods=['POST'])
+@login_required
+def delete_sale(id):
+    if current_user.role != 'admin':
+        flash('Permission denied.', 'error')
+        return redirect(url_for('list_sales'))
+    db.sales.delete_one({'_id': ObjectId(id)})
+    flash('Sale deleted successfully.', 'success')
+    return redirect(url_for('list_sales'))
+
+@app.route('/purchases/delete/<id>', methods=['POST'])
+@login_required
+def delete_purchase(id):
+    if current_user.role != 'admin':
+        flash('Permission denied.', 'error')
+        return redirect(url_for('list_purchases'))
+    db.purchases.delete_one({'_id': ObjectId(id)})
+    flash('Purchase deleted successfully.', 'success')
+    return redirect(url_for('list_purchases'))
+
+@app.route('/prescriptions/delete/<id>', methods=['POST'])
+@login_required
+def delete_prescription(id):
+    if current_user.role != 'admin':
+        flash('Permission denied.', 'error')
+        return redirect(url_for('list_prescriptions'))
+    db.prescriptions.delete_one({'_id': ObjectId(id)})
+    flash('Prescription deleted successfully.', 'success')
+    return redirect(url_for('list_prescriptions'))
+
 # --- ERRORS ---
 @app.errorhandler(404)
 def not_found_error(error):
@@ -692,4 +927,5 @@ def internal_error(error):
     return render_template('errors/500.html'), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

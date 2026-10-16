@@ -1,53 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Pharmacy Billing / POS</h2>
+    <h2>New Sale (Strict Mode)</h2>
     <a href="{{ url_for('list_sales') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
 
 <div class="row">
-    <!-- Left side: Cart/Billing Form -->
-    <div class="col-lg-8">
+    <div class="col-lg-12">
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Sale Items</h6>
+            <div class="card-header py-3 bg-primary text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-shopping-cart"></i> Sale Details</h6>
             </div>
             <div class="card-body">
-                <form method="POST" id="saleForm">
-                    
-                    <div id="items-container">
-                        <div class="row mb-2 item-row">
-                            <div class="col-md-6">
-                                <select name="medicine_id[]" class="form-select medicine-select" required>
-                                    <option value="">Search / Select Medicine...</option>
-                                    {% for med in medicines %}
-                                    <option value="{{ med._id }}" data-price="{{ med.selling_price }}" data-stock="{{ med.quantity }}">
-                                        {{ med.medicine_name }} (Stock: {{ med.quantity }} | ₹{{ med.selling_price }})
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="number" name="quantity[]" class="form-control qty-input" placeholder="Quantity" min="1" required>
-                            </div>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control item-total" placeholder="₹0.00" readonly>
-                            </div>
-                            <div class="col-md-1">
-                                <button type="button" class="btn btn-danger remove-item"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="button" class="btn btn-success btn-sm mb-4" id="add-item">
-                        <i class="fas fa-plus"></i> Add Another Medicine
-                    </button>
-
-                    <hr>
+                
+                <form method="POST" action="{{ url_for('new_sale') }}" enctype="multipart/form-data">
                     
                     <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label>Customer *</label>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Customer *</label>
                             <select name="customer_id" class="form-select" required>
                                 <option value="">Select Customer</option>
                                 {% for cust in customers %}
@@ -55,119 +25,63 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label>Payment Method *</label>
+                        <div class="col-md-6">
+                            <label class="fw-bold text-primary"><i class="fas fa-camera"></i> Upload Prescription Image</label>
+                            <input type="file" name="image" class="form-control" accept="image/*">
+                            <small class="text-muted">Image will be securely saved to MongoDB GridFS</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3 text-success">Cart Items</h5>
+                    <p class="text-muted small">Fill out up to 5 items. Leave unused rows blank.</p>
+
+                    <div id="items-container">
+                        {% for i in range(5) %}
+                        <div class="row mb-3 p-2 border rounded bg-light item-row">
+                            <div class="col-md-8">
+                                <label class="small text-muted">Medicine Selection</label>
+                                <select name="medicine_id[]" class="form-select">
+                                    <option value="">-- Select Medicine --</option>
+                                    {% for med in medicines %}
+                                    <option value="{{ med._id }}">
+                                        {{ med.medicine_name }} - ₹{{ "%.2f"|format(med.selling_price) }} (Stock: {{ med.quantity }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small text-muted">Quantity</label>
+                                <input type="number" name="quantity[]" class="form-control" min="1" placeholder="Enter quantity">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+                    
+                    <div class="row mb-3 mt-4">
+                        <div class="col-md-6">
+                            <label class="fw-bold">Payment Method *</label>
                             <select name="payment_method" class="form-select" required>
                                 <option value="Cash">Cash</option>
                                 <option value="Card">Card</option>
                                 <option value="UPI">UPI</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label>Discount (₹)</label>
-                            <input type="number" step="0.01" min="0" name="discount" id="discount-input" class="form-control" value="0">
+                        <div class="col-md-6">
+                            <label class="fw-bold">Flat Discount (₹)</label>
+                            <input type="number" name="discount" class="form-control" min="0" step="0.01" value="0">
                         </div>
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-lg w-100">Complete Sale</button>
+
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-success btn-lg px-5"><i class="fas fa-check-circle"></i> Complete Sale</button>
+                    </div>
                 </form>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Right side: Summary -->
-    <div class="col-lg-4">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Summary</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Subtotal:</span>
-                    <strong id="summary-subtotal">₹0.00</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2 text-danger">
-                    <span>Discount:</span>
-                    <strong id="summary-discount">-₹0.00</strong>
-                </div>
-                <hr>
-                <div class="d-flex justify-content-between mb-2 h4 text-success">
-                    <span>Grand Total:</span>
-                    <strong id="summary-total">₹0.00</strong>
-                </div>
+
             </div>
         </div>
     </div>
 </div>
-
-{% endblock %}
-
-{% block scripts %}
-<script>
-function calculateTotals() {
-    let subtotal = 0;
-    document.querySelectorAll('.item-row').forEach(row => {
-        const select = row.querySelector('.medicine-select');
-        const qtyInput = row.querySelector('.qty-input');
-        const totalInput = row.querySelector('.item-total');
-        
-        if (select.selectedIndex > 0 && qtyInput.value) {
-            const price = parseFloat(select.options[select.selectedIndex].dataset.price);
-            const qty = parseInt(qtyInput.value);
-            const stock = parseInt(select.options[select.selectedIndex].dataset.stock);
-            
-            if (qty > stock) {
-                alert('Quantity exceeds available stock!');
-                qtyInput.value = stock;
-                return;
-            }
-            
-            const total = price * qty;
-            totalInput.value = '₹' + total.toFixed(2);
-            subtotal += total;
-        } else {
-            totalInput.value = '₹0.00';
-        }
-    });
-    
-    const discount = parseFloat(document.getElementById('discount-input').value) || 0;
-    const grandTotal = subtotal - discount;
-    
-    document.getElementById('summary-subtotal').innerText = '₹' + subtotal.toFixed(2);
-    document.getElementById('summary-discount').innerText = '-₹' + discount.toFixed(2);
-    document.getElementById('summary-total').innerText = '₹' + Math.max(0, grandTotal).toFixed(2);
-}
-
-document.getElementById('items-container').addEventListener('change', calculateTotals);
-document.getElementById('items-container').addEventListener('keyup', calculateTotals);
-document.getElementById('discount-input').addEventListener('keyup', calculateTotals);
-document.getElementById('discount-input').addEventListener('change', calculateTotals);
-
-document.getElementById('add-item').addEventListener('click', function() {
-    const container = document.getElementById('items-container');
-    const firstRow = container.querySelector('.item-row');
-    const newRow = firstRow.cloneNode(true);
-    
-    newRow.querySelector('.medicine-select').selectedIndex = 0;
-    newRow.querySelector('.qty-input').value = '';
-    newRow.querySelector('.item-total').value = '';
-    
-    newRow.querySelector('.remove-item').addEventListener('click', function() {
-        if(container.querySelectorAll('.item-row').length > 1) {
-            newRow.remove();
-            calculateTotals();
-        }
-    });
-    
-    container.appendChild(newRow);
-});
-
-document.querySelector('.remove-item').addEventListener('click', function() {
-    const container = document.getElementById('items-container');
-    if(container.querySelectorAll('.item-row').length > 1) {
-        this.closest('.item-row').remove();
-        calculateTotals();
-    }
-});
-</script>
 {% endblock %}

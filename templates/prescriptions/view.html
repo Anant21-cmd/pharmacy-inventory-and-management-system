@@ -36,7 +36,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in prescription.items %}
+                    {% for item in prescription['items'] %}
                     <tr>
                         <td>{{ item.medicine_name }}</td>
                         <td>{{ item.dosage }}</td>
